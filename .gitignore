@@ -1,0 +1,17 @@
+# Packages
+node_modules
+yarn.lock
+yarn-*.log
+package.lock
+
+# Build
+dist
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Misc
+.vscode
+.DS_Store
