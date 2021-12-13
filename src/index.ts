@@ -1,7 +1,11 @@
 import express from 'express';
+import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import error from './middleware/error';
 import statsRoutes from './routes/stats';
+
+// -- configure env
+dotenv.config();
 
 /**
  * Express instance
