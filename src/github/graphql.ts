@@ -120,6 +120,78 @@ export const parseContributions = (graphs: ContributionGraph[]) => {
   return contributions;
 };
 
+/**
+ * Extract streak stats based on contribution count and dates
+ *
+ * @param contributions
+ * @returns
+ */
+export const getStreakStats = (contributions?: Contributions) => {
+  if (!contributions) {
+    return undefined;
+  }
+
+  const contributionsArr = Object.keys(contributions);
+  const todayKey = contributionsArr.at(-1) ?? '';
+  const firstKey = contributionsArr[0] ?? '';
+
+  const stats = {
+    totalContributions: 0,
+    firstContribution: '',
+    longestStreak: {
+      start: firstKey,
+      end: firstKey,
+      length: 0,
+    },
+    currentStreak: {
+      start: firstKey,
+      end: firstKey,
+      length: 0,
+    },
+  };
+
+  // calculate stats based on contributions
+  for (const contributionDate in contributions) {
+    const contributionCount = contributions[contributionDate];
+    // add contribution count to total
+    stats.totalContributions += contributionCount;
+
+    // check if still in streak
+    if (contributionCount > 0) {
+      // increment streak
+      stats.currentStreak.length += 1;
+      stats.currentStreak.end = contributionDate;
+
+      // set start on first day of streak
+      if (stats.currentStreak.length == 1) {
+        stats.currentStreak.start = contributionDate;
+      }
+
+      // first date is the first contribution
+      if (stats.firstContribution.length <= 0) {
+        stats.firstContribution = contributionDate;
+      }
+
+      // update longest streak
+      if (stats.currentStreak.length > stats.longestStreak.length) {
+        // copy current streak start, end, and length into longest streak
+        stats.longestStreak.start = stats.currentStreak.start;
+        stats.longestStreak.end = stats.currentStreak.end;
+        stats.longestStreak.length = stats.currentStreak.length;
+      }
+    }
+
+    // reset streak with exception for today
+    else if (contributionDate != todayKey) {
+      // reset streak
+      stats.currentStreak.length = 0;
+      stats.currentStreak.start = todayKey;
+      stats.currentStreak.end = todayKey;
+    }
+  }
+  return stats;
+};
+
 type Contributions = {
   [key: string]: number;
 };
