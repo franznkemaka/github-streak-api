@@ -1,10 +1,13 @@
 import express from 'express';
-import { getContributionGraphs } from '../github/graphql';
+import github from '../github';
 const router = express.Router();
 
 router.route('/:username').get(async (req, res) => {
-  const contributionGraph = await getContributionGraphs(req.params.username);
-  res.status(200).json(contributionGraph.data.user.contributionsCollection.contributionCalendar);
+  const { username } = req.params;
+  const contributionGraphs = await github.fetchContributionGraphs(username, [2021]);
+  const contributions = github.parseContributions(contributionGraphs);
+
+  res.status(200).json(contributions);
   //
 });
 
