@@ -10,7 +10,8 @@ export const fetchContributions = async (
   contributionYears: number[],
   cache: any,
 ) => {
-  let graphContributions: Contributions | undefined = undefined;
+  let allContributions: Contributions | undefined = undefined;
+
   const now = new Date();
   const today = now.toISOString().split('T')[0];
   const currentYear = now.getFullYear();
@@ -18,37 +19,56 @@ export const fetchContributions = async (
   tomorrowDate.setDate(tomorrowDate.getDate() + 1);
   const tomorrow = now.toISOString().split('T')[0];
 
+  const manyContributions: Contributions[] = [];
+  const yearsToFetch: number[] = [];
+
+  // -- grab year's contributions from cache
   for (const contributionYear of contributionYears) {
-    const cacheKey = `contributionGraph_${contributionYear}`;
+    const cacheKey = `contributions_${contributionYear}`;
     const isCacheable = contributionYear != currentYear;
+    const cachedContributions = cache.getKey(cacheKey);
 
-    let contributions: Contributions | undefined = undefined;
-
-    // -- fetch previous years only once per year
-    const cachedGraphContributions = cache.getKey(cacheKey);
-    if (isCacheable && cachedGraphContributions) {
-      console.log(`Use cached graph ${contributionYear}`);
-      contributions = cachedGraphContributions;
-    } else {
-      // -- fetch new
-      const graph = await fetchContributionGraph(username, contributionYear);
-      if (!graph) {
-        continue;
-      } else {
-        contributions = parseContributionGraph(graph);
-      }
-
-      // TODO: cache values daily if already contributed for current day
-
-      if (isCacheable) {
-        console.log(`Set graph cache ${contributionYear}`);
-        cache.setKey(cacheKey, contributions);
-      }
+    if (!isCacheable || !cachedContributions) {
+      yearsToFetch.push(contributionYear);
+      continue;
     }
 
+    console.log(`Using ${cacheKey} for ${username}`);
+    manyContributions.push(cachedContributions);
+  }
+
+  // -- fetch remaining year's contributions in concurrently
+  const fetchContributionGraphRequests = yearsToFetch
+    .slice()
+    .map((year) => fetchContributionGraph(username, year));
+  const fetchContributionGraphRes = await Promise.all(fetchContributionGraphRequests);
+  let i = 0;
+  for (const graph of fetchContributionGraphRes) {
+    if (!graph) {
+      continue;
+    }
+
+    const contributionYear = yearsToFetch[i];
+    const isCacheable = contributionYear != currentYear;
+    const contributions = parseContributionGraph(graph);
+
+    if (isCacheable && contributions) {
+      const cacheKey = `contributions_${contributionYear}`;
+      console.log(`Setting ${cacheKey} for ${username}`);
+      cache.setKey(cacheKey, contributions);
+    }
+
+    contributions && manyContributions.push(contributions);
+
+    // TODO: cache values daily if already contributed for current day
+    i++;
+  }
+
+  // flatten all contributions to a single object
+  for (const contributions of manyContributions) {
     for (const contributionDate in contributions) {
-      if (!graphContributions) {
-        graphContributions = {};
+      if (!allContributions) {
+        allContributions = {};
       }
 
       const count = contributions[contributionDate];
@@ -56,12 +76,12 @@ export const fetchContributions = async (
       // also count next day if user contributed already
       if (contributionDate <= today || (contributionDate == tomorrow && count > 0)) {
         // add contributions to the array
-        graphContributions[contributionDate] = count;
+        allContributions[contributionDate] = count;
       }
     }
   }
 
-  return graphContributions;
+  return allContributions;
 };
 
 /**
