@@ -37,7 +37,7 @@ export const parseContributionGraphs = (graphs: ContributionGraph[]) => {
  * @param contributions
  * @returns stats
  */
-const extractStreakStats = (contributions?: Contributions) => {
+export const extractStreakStats = (contributions?: Contributions) => {
   if (!contributions) {
     return undefined;
   }
