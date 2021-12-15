@@ -1,2 +1,4 @@
 import * as graphql from './graphql';
-export default graphql;
+import * as parser from './parser';
+const github = { ...graphql, ...parser };
+export default github;
