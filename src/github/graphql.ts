@@ -2,17 +2,27 @@ import axios from 'axios';
 
 const url = 'https://api.github.com/graphql';
 
+/**
+ * Parse all env GitHub tokens for later requests
+ */
 const getGitHubTokens = () => {
   return process.env.GITHUB_TOKENS?.split?.(',') ?? [];
 };
 
-const getGitHubToken = () => {
+/**
+ * Get a random github token for graphql requests.
+ * Due to GitHub rate limit, the more the tokens the better
+ */
+const getGitHubToken = (): string | undefined => {
   const tokens = getGitHubTokens();
   if (tokens.length == 0) return undefined;
   if (tokens.length == 1) return tokens[0];
   return tokens[Math.floor(Math.random() * (tokens.length - 1))];
 };
 
+/**
+ * Send request to GitHub GraphQL with custom query
+ */
 const fetchGraphQL = async (query: string) => {
   const githubToken = getGitHubToken();
   return await axios.post(
@@ -29,6 +39,9 @@ const fetchGraphQL = async (query: string) => {
   );
 };
 
+/**
+ * Fetch all contribution years of a GitHub user since creation
+ */
 export const fetchContributionYears = async (username: string): Promise<number[] | undefined> => {
   const query = `query {
     user(login: "${username}") {
@@ -41,14 +54,19 @@ export const fetchContributionYears = async (username: string): Promise<number[]
 
   try {
     const res = await fetchGraphQL(query);
+    // TODO: handle user not found
     const contributionYears =
       res.data?.data?.user?.contributionsCollection?.contributionYears || undefined;
     return contributionYears;
   } catch (e) {
+    console.error('fetchContributionYears', e);
     return undefined;
   }
 };
 
+/**
+ * Fetch user contribution calendar of a particular year
+ */
 export const fetchContributionGraph = async (
   username: string,
   year: number,
@@ -74,12 +92,17 @@ export const fetchContributionGraph = async (
 
   try {
     const res = await fetchGraphQL(query);
+    // TODO: handle user not found
     return res.data?.data?.user?.contributionsCollection?.contributionCalendar;
   } catch (e) {
+    console.error('fetchContributionGraph', e);
     return undefined;
   }
 };
 
+/**
+ * Fetch user contribution calendars for provided years
+ */
 export const fetchContributionGraphs = async (username: string, contributionYears: number[]) => {
   const graphs: ContributionGraph[] = [];
 
@@ -93,7 +116,11 @@ export const fetchContributionGraphs = async (username: string, contributionYear
   return graphs;
 };
 
-export const parseContributions = (graphs: ContributionGraph[]) => {
+/**
+ * Parse all user active contributions to a large
+ * single calendar(array) with contribution count
+ */
+export const parseContributionGraphs = (graphs: ContributionGraph[]) => {
   const contributions: Contributions = {};
   const now = new Date();
   const today = now.toISOString().split('T')[0];
@@ -124,9 +151,9 @@ export const parseContributions = (graphs: ContributionGraph[]) => {
  * Extract streak stats based on contribution count and dates
  *
  * @param contributions
- * @returns
+ * @returns stats
  */
-export const getStreakStats = (contributions?: Contributions) => {
+const extractStreakStats = (contributions?: Contributions) => {
   if (!contributions) {
     return undefined;
   }
@@ -135,18 +162,18 @@ export const getStreakStats = (contributions?: Contributions) => {
   const todayKey = contributionsArr.at(-1) ?? '';
   const firstKey = contributionsArr[0] ?? '';
 
-  const stats = {
+  const stats: StreakStats = {
     totalContributions: 0,
     firstContribution: '',
     longestStreak: {
       start: firstKey,
       end: firstKey,
-      length: 0,
+      days: 0,
     },
     currentStreak: {
       start: firstKey,
       end: firstKey,
-      length: 0,
+      days: 0,
     },
   };
 
@@ -159,11 +186,11 @@ export const getStreakStats = (contributions?: Contributions) => {
     // check if still in streak
     if (contributionCount > 0) {
       // increment streak
-      stats.currentStreak.length += 1;
+      stats.currentStreak.days += 1;
       stats.currentStreak.end = contributionDate;
 
       // set start on first day of streak
-      if (stats.currentStreak.length == 1) {
+      if (stats.currentStreak.days == 1) {
         stats.currentStreak.start = contributionDate;
       }
 
@@ -173,23 +200,52 @@ export const getStreakStats = (contributions?: Contributions) => {
       }
 
       // update longest streak
-      if (stats.currentStreak.length > stats.longestStreak.length) {
+      if (stats.currentStreak.days > stats.longestStreak.days) {
         // copy current streak start, end, and length into longest streak
         stats.longestStreak.start = stats.currentStreak.start;
         stats.longestStreak.end = stats.currentStreak.end;
-        stats.longestStreak.length = stats.currentStreak.length;
+        stats.longestStreak.days = stats.currentStreak.days;
       }
     }
 
     // reset streak with exception for today
     else if (contributionDate != todayKey) {
       // reset streak
-      stats.currentStreak.length = 0;
+      stats.currentStreak.days = 0;
       stats.currentStreak.start = todayKey;
       stats.currentStreak.end = todayKey;
     }
   }
   return stats;
+};
+
+/**
+ * Fetch and parse github user contribution to obtain streak stats
+ *
+ * @param username
+ * @returns stats
+ */
+export const getStreakStats = async (username: string) => {
+  const contributionYears = [2020, 2021];
+  const contributionGraphs = await fetchContributionGraphs(username, contributionYears);
+  const contributions = parseContributionGraphs(contributionGraphs);
+  const stats = extractStreakStats(contributions);
+  return stats;
+};
+
+type StreakStats = {
+  totalContributions: number;
+  firstContribution: string;
+  longestStreak: {
+    start: string;
+    end: string;
+    days: number;
+  };
+  currentStreak: {
+    start: string;
+    end: string;
+    days: number;
+  };
 };
 
 type Contributions = {
