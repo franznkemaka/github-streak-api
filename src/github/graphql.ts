@@ -100,22 +100,6 @@ export const fetchContributionGraph = async (
   }
 };
 
-/**
- * Fetch user contribution calendars for provided years
- */
-export const fetchContributionGraphs = async (username: string, contributionYears: number[]) => {
-  const graphs: ContributionGraph[] = [];
-
-  for (const contributionYear of contributionYears) {
-    const graph = await fetchContributionGraph(username, contributionYear);
-    if (graph) {
-      graphs.push(graph);
-    }
-  }
-
-  return graphs;
-};
-
 export type ContributionGraph = {
   totalContributions: number;
   weeks: {
