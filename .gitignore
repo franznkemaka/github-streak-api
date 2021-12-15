@@ -10,6 +10,9 @@ dist
 # Cache
 .cache
 
+# Logs
+logs
+
 # Env
 .env
 .env.*

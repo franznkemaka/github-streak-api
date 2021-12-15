@@ -1,4 +1,5 @@
 import axios from 'axios';
+import logger from '../utils/logger';
 
 const url = 'https://api.github.com/graphql';
 
@@ -59,7 +60,8 @@ export const fetchContributionYears = async (username: string): Promise<number[]
       res.data?.data?.user?.contributionsCollection?.contributionYears || undefined;
     return contributionYears;
   } catch (e) {
-    console.error('fetchContributionYears', e);
+    logger.error('fetchContributionYears', e);
+    logger.debug('GitHub username: ', username);
     return undefined;
   }
 };
@@ -95,7 +97,8 @@ export const fetchContributionGraph = async (
     // TODO: handle user not found
     return res.data?.data?.user?.contributionsCollection?.contributionCalendar;
   } catch (e) {
-    console.error('fetchContributionGraph', e);
+    logger.error('fetchContributionGraph', e);
+    logger.debug('GitHub username: ', username);
     return undefined;
   }
 };
