@@ -1,6 +1,8 @@
 import { ContributionGraph, fetchContributionGraph, fetchContributionYears } from './graphql';
 import flatCache from 'flat-cache';
-import path from 'path/posix';
+import path from 'path';
+import enhancedCache from '../utils/cache';
+const currentYearContributionCachingSecs = 7200;
 
 /**
  * Fetch user contribution calendars for provided years
@@ -25,10 +27,9 @@ export const fetchContributions = async (
   // -- grab year's contributions from cache
   for (const contributionYear of contributionYears) {
     const cacheKey = `contributions_${contributionYear}`;
-    const isCacheable = contributionYear != currentYear;
-    const cachedContributions = cache.getKey(cacheKey);
+    const cachedContributions = cache.getKey(cacheKey) || enhancedCache(cache).get(cacheKey);
 
-    if (!isCacheable || !cachedContributions) {
+    if (!cachedContributions) {
       yearsToFetch.push(contributionYear);
       continue;
     }
@@ -49,34 +50,52 @@ export const fetchContributions = async (
     }
 
     const contributionYear = yearsToFetch[i];
-    const isCacheable = contributionYear != currentYear;
+    const isPermanentCacheable = contributionYear != currentYear;
     const contributions = parseContributionGraph(graph);
 
-    if (isCacheable && contributions) {
+    if (isPermanentCacheable && contributions) {
       const cacheKey = `contributions_${contributionYear}`;
       console.log(`Setting ${cacheKey} for ${username}`);
       cache.setKey(cacheKey, contributions);
     }
 
     contributions && manyContributions.push(contributions);
-
-    // TODO: cache values daily if already contributed for current day
     i++;
   }
 
   // flatten all contributions to a single object
   for (const contributions of manyContributions) {
+    let hasAlreadyCommitted = false;
+    let lastCommitDate: string | undefined = undefined;
     for (const contributionDate in contributions) {
       if (!allContributions) {
         allContributions = {};
       }
 
       const count = contributions[contributionDate];
+      if (!hasAlreadyCommitted) {
+        hasAlreadyCommitted =
+          (contributionDate == tomorrow || contributionDate == today) && count > 0;
+        lastCommitDate = contributionDate;
+      }
+
       // count contributions up until today
       // also count next day if user contributed already
       if (contributionDate <= today || (contributionDate == tomorrow && count > 0)) {
         // add contributions to the array
         allContributions[contributionDate] = count;
+      }
+    }
+
+    if (hasAlreadyCommitted) {
+      const contributionYear = parseInt(lastCommitDate?.split?.('-')?.[0] || '');
+      const cacheKey = `contributions_${contributionYear}`;
+
+      if (contributionYear && !enhancedCache(cache).get(cacheKey)) {
+        console.log(
+          `Setting cache ${cacheKey} for ${currentYearContributionCachingSecs} secs for ${username}`,
+        );
+        enhancedCache(cache).set(cacheKey, contributions, currentYearContributionCachingSecs);
       }
     }
   }
