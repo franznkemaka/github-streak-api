@@ -1,6 +1,6 @@
 import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
-import bodyParser from 'body-parser';
 import error from './middleware/error';
 import statsRoutes from './routes/stats';
 
@@ -12,11 +12,7 @@ dotenv.config();
  * @public
  */
 const app = express();
-
-// parse body params and attache them to req.body
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(cors());
 // mount api routes
 app.use('/stats', statsRoutes);
 app.use(error.notFound);
