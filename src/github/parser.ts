@@ -34,7 +34,6 @@ export const fetchContributions = async (
       continue;
     }
 
-    console.log(`Using ${cacheKey} for ${username}`);
     manyContributions.push(cachedContributions);
   }
 
@@ -55,7 +54,6 @@ export const fetchContributions = async (
 
     if (isPermanentCacheable && contributions) {
       const cacheKey = `contributions_${contributionYear}`;
-      console.log(`Setting ${cacheKey} for ${username}`);
       cache.setKey(cacheKey, contributions);
     }
 
@@ -92,9 +90,6 @@ export const fetchContributions = async (
       const cacheKey = `contributions_${contributionYear}`;
 
       if (contributionYear && !enhancedCache(cache).get(cacheKey)) {
-        console.log(
-          `Setting cache ${cacheKey} for ${currentYearContributionCachingSecs} secs for ${username}`,
-        );
         enhancedCache(cache).set(cacheKey, contributions, currentYearContributionCachingSecs);
       }
     }
