@@ -55,7 +55,6 @@ export const fetchContributionYears = async (username: string): Promise<number[]
 
   try {
     const res = await fetchGraphQL(query);
-    // TODO: handle user not found
     const contributionYears =
       res.data?.data?.user?.contributionsCollection?.contributionYears || undefined;
     return contributionYears;
@@ -94,7 +93,6 @@ export const fetchContributionGraph = async (
 
   try {
     const res = await fetchGraphQL(query);
-    // TODO: handle user not found
     return res.data?.data?.user?.contributionsCollection?.contributionCalendar;
   } catch (e) {
     logger.error('fetchContributionGraph', e);

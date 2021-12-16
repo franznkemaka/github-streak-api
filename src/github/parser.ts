@@ -213,6 +213,24 @@ export const getStreakStats = async (username: string) => {
   contributionYears.sort((a, b) => a - b);
 
   const contributions = await fetchContributions(username, contributionYears, cache);
+
+  if (contributionYears.length == 0 || !contributions) {
+    return {
+      totalContributions: 0,
+      firstContribution: null,
+      longestStreak: {
+        start: null,
+        end: null,
+        days: 0,
+      },
+      currentStreak: {
+        start: null,
+        end: null,
+        days: 0,
+      },
+    };
+  }
+
   const stats = extractStreakStats(contributions);
 
   // Persist cache

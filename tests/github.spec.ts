@@ -43,5 +43,3 @@ describe('GitHub Unit Test', () => {
     expect(stats?.currentStreak.days).toBe(2);
   });
 });
-
-// TODO: add integration tests with api fetch
