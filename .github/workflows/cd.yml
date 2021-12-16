@@ -1,0 +1,52 @@
+name: CD
+
+on:
+  push:
+    branches: [dev]
+    paths-ignore:
+      - '*.md'
+
+jobs:
+  test:
+    name: ✅ Test
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '✔️') == false && contains(github.event.head_commit.message, '[ci skip]') == false
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run unit & integration tests
+        run: npm test
+
+  deploy:
+    name: 🚀 Deploy
+    runs-on: [self-hosted, linux]
+    needs: test
+    env:
+      WORK_DIR: /home/action-runner/rigle/github-streak-api/_work/github-streak-api/github-streak-api
+      DEPLOY_PATH: /var/www/rigle/api/github-streak/app
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          clean: false
+
+      - name: Install dependencies
+        run: |
+          yarn install
+
+      - name: Build
+        run: |
+          yarn build
+
+      - name: Move to production
+        run: |
+          cp -r $WORK_DIR/dist $DEPLOY_PATH/dist
+          cp -r $WORK_DIR/package.json $DEPLOY_PATH/package.json
+          cd $DEPLOY_PATH && yarn install --production
