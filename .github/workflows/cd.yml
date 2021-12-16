@@ -2,7 +2,7 @@ name: CD
 
 on:
   push:
-    branches: [dev]
+    branches: [main]
     paths-ignore:
       - '*.md'
 
@@ -30,7 +30,7 @@ jobs:
     needs: test
     env:
       WORK_DIR: /home/action-runner/rigle/github-streak-api/_work/github-streak-api/github-streak-api
-      DEPLOY_PATH: /var/www/rigle/api/github-streak/app
+      DEPLOY_PATH: /var/www/rigle/api/github-streak
 
     steps:
       - uses: actions/checkout@v2
@@ -47,6 +47,6 @@ jobs:
 
       - name: Move to production
         run: |
-          cp -r $WORK_DIR/dist $DEPLOY_PATH/dist
+          cp -r $WORK_DIR/dist $DEPLOY_PATH/
           cp -r $WORK_DIR/package.json $DEPLOY_PATH/package.json
           cd $DEPLOY_PATH && yarn install --production
