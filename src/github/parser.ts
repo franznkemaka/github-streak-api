@@ -27,7 +27,7 @@ export const fetchContributions = async (
   // -- grab year's contributions from cache
   for (const contributionYear of contributionYears) {
     const cacheKey = `contributions_${contributionYear}`;
-    const cachedContributions = cache.getKey(cacheKey) || enhancedCache(cache).get(cacheKey);
+    const cachedContributions = enhancedCache(cache).get(cacheKey) || cache.getKey(cacheKey);
 
     if (!cachedContributions) {
       yearsToFetch.push(contributionYear);
