@@ -40,13 +40,13 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install
-
       - name: Build
         run: |
           yarn build
-
       - name: Move to production
         run: |
           cp -r $WORK_DIR/dist $DEPLOY_PATH/
           cp -r $WORK_DIR/package.json $DEPLOY_PATH/package.json
           cd $DEPLOY_PATH && yarn install --production
+      - name: 🚀
+        run: pm2 restart github-streak-api
