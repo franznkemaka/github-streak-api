@@ -1,6 +1,6 @@
 {
   "name": "github-streak-api",
-  "version": "1.0.0-prod",
+  "version": "1.0.0",
   "private": true,
   "description": "👨‍💻 GitHub Streak API",
   "repository": "https://github.com/franznkemaka/github-streak-api",
