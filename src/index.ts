@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import error from './middleware/error';
 import statsRoutes from './routes/stats';
+import graphRoutes from './routes/graph';
 
 // -- configure env
 dotenv.config();
@@ -26,6 +27,7 @@ app.use(cors());
 
 // -- mount api routes
 app.use('/stats', statsRoutes);
+app.use('/graph', graphRoutes);
 app.use(error.notFound);
 
 const port = process.env.PORT || 5000;
