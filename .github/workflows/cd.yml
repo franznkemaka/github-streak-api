@@ -29,8 +29,8 @@ jobs:
     runs-on: [self-hosted, linux]
     needs: test
     env:
-      WORK_DIR: /home/action-runner/rigle/github-streak-api/_work/github-streak-api/github-streak-api
-      DEPLOY_PATH: /var/www/rigle/api/github-streak
+      WORK_DIR: /home/action-runner/x/github-streak-api/_work/github-streak-api/github-streak-api
+      DEPLOY_PATH: /var/www/x/api/github-streak
 
     steps:
       - uses: actions/checkout@v2

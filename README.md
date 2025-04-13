@@ -11,11 +11,11 @@ A simple and fast api that provides GitHub Streak Stats: **total contributions, 
 
 ```json
 
-https://api.rigle.co/github-streak/stats/[GITHUB_USERNAME_HERE]
+https://api.franznkemaka.com/github-streak/stats/[GITHUB_USERNAME_HERE]
 
 Example:
 
-https://api.rigle.co/github-streak/stats/franznkemaka
+https://api.franznkemaka.com/github-streak/stats/franznkemaka
 
 Returns:
 
@@ -56,7 +56,7 @@ Visit [this link](https://github.com/settings/tokens/new?description=GitHub%20St
 
 ## ⚖️ Terms & Conditions
 
-When using the production api (api.rigle.co/github-streak/stats) hereby production-api, please avoid sending too many requests to maintain higher availability.
+When using the production api (api.franznkemaka.com/github-streak/stats) hereby production-api, please avoid sending too many requests to maintain higher availability.
 The production-api might collect and store your IP for security reasons.
 It is favorable to host your own instance when possible, to avoid GitHub GraphQL downtimes.
 
